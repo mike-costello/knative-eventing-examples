@@ -1,0 +1,32 @@
+apiVersion: operator.knative.dev/v1alpha1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
+spec: 
+  defaultBrokerClass: MTChannelBasedBroker
+  deployments: 
+    - name: eventing-controller
+      annotations:
+       "sidecar.istio.io/inject": "true"
+       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+    - name: eventing-webhook 
+      annotations:
+       "sidecar.istio.io/inject": "true"
+       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+    - name: imc-controller 
+      annotations:
+       "sidecar.istio.io/inject": "true"
+       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+    - name: imc-dispatcher 
+      annotations:
+       "sidecar.istio.io/inject": "true"
+       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
+
+#imc-controller          2/2       2            2           2m22s
+#imc-dispatcher          2/2       2            2           2m21s
+#mt-broker-controller    2/2       2            2           2m19s
+#mt-broker-filter        1/1       1            1           2m20s
+#mt-broker-ingress       1/1       1            1           2m20s
+#pingsource-mt-adapter   0/0       0            0           2m26s
+#sugar-controller        2/2       2            2           2m19s

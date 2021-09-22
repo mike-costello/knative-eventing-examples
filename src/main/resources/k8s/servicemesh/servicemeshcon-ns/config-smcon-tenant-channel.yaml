@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-smcon-tenant-channel
+  namespace: servicemesh-con
+data: 
+  bootstrapServers: small-event-cluster-kafka-bootstrap.amq-streams:9092
+  channelTemplateSpec: | 
+    apiVersion: messaging.knative.dev/v1beta1
+    kind: KafkaChannel
+    spec: 
+      numPartitions: 50
+      replicationFactor: 2

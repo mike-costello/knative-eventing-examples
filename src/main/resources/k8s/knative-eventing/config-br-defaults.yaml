@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-br-defaults
+  namespace: knative-eventing
+data:
+  default-br-config: |
+    clusterDefault:
+      apiVersion: v1
+      brokerClass: MTChannelBasedBroker
+      kind: ConfigMap
+      name: config-kafka-channel
+      namespace: knative-eventing
+    namespaceDefaults:
+      newco-tenant: 
+        apiVersion: v1
+        brokerClass: InMemory
+        kind: ConfigMap
+        name: config-imc-channel
+        namespace: newco-tenant
+      servicemesh-con:
+        apiVersion: v1
+        brokerClass: KafkaBroker
+        kind: ConfigMap
+        name: config-smcon-tenant-channel
+        namespace: servicemesh-con

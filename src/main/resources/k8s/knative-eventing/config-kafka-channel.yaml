@@ -4,6 +4,7 @@ metadata:
   name: config-kafka-channel
   namespace: knative-eventing
 data: 
+  bootstrapServers: small-event-cluster.amq-streams:9092
   channelTemplateSpec: | 
     apiVersion: messaging.knative.dev/v1beta1
     kind: KafkaChannel

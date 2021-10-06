@@ -1,0 +1,129 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    knativekafkas.operator.serverless.openshift.io/ownerName: knative-kafka
+    knativekafkas.operator.serverless.openshift.io/ownerNamespace: knative-eventing
+  name: kafka-webhook
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v0.23.5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-webhook
+      role: kafka-webhook
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: kafka-webhook
+        role: kafka-webhook
+      annotations:
+        sidecar.istio.io/inject: 'true'
+    spec:
+      restartPolicy: Always
+      serviceAccountName: kafka-webhook
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 300
+      securityContext: {}
+      containers:
+        - resources:
+            limits:
+              cpu: 200m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 50Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8443
+              scheme: HTTPS
+              httpHeaders:
+                - name: k-kubelet-probe
+                  value: webhook
+            timeoutSeconds: 1
+            periodSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: kafka-webhook
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8443
+              scheme: HTTPS
+              httpHeaders:
+                - name: k-kubelet-probe
+                  value: webhook
+            initialDelaySeconds: 20
+            timeoutSeconds: 1
+            periodSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: WEBHOOK_NAME
+              value: kafka-webhook
+            - name: WEBHOOK_PORT
+              value: '8443'
+            - name: METRICS_PROMETHEUS_HOST
+              value: 127.0.0.1
+          ports:
+            - name: https-webhook
+              containerPort: 8443
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+            - name: profiling
+              containerPort: 8008
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          terminationMessagePolicy: FallbackToLogsOnError
+          image: >-
+            registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-webhook-rhel8@sha256:87358c28110dbcd4c309e734144539e92c3744a2eb36a874e6ada5d10d316c1c
+        - name: kube-rbac-proxy
+          image: >-
+            registry.redhat.io/openshift4/ose-kube-rbac-proxy@sha256:518f5e036a6c67257c2926d9cad073e46ba0663c1386b97aadbf51d3a27ab559
+          args:
+            - '--secure-listen-address=0.0.0.0:8444'
+            - '--upstream=http://127.0.0.1:9090/'
+            - '--tls-cert-file=/etc/tls/private/tls.crt'
+            - '--tls-private-key-file=/etc/tls/private/tls.key'
+            - '--logtostderr=true'
+            - '--v=10'
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          volumeMounts:
+            - name: secret-kafka-webhook-sm-service-tls
+              mountPath: /etc/tls/private
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      serviceAccount: kafka-webhook
+      volumes:
+        - name: secret-kafka-webhook-sm-service-tls
+          secret:
+            secretName: kafka-webhook-sm-service-tls
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

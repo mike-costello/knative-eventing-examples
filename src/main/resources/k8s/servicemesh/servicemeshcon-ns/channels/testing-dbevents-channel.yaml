@@ -1,0 +1,6 @@
+apiVersion: messaging.knative.dev/v1
+kind: Channel
+metadata:
+  name: testing-dbevents
+  #annotations:
+  #  eventing.knative.dev/scope: namespace

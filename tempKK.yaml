@@ -1,0 +1,73 @@
+apiVersion: operator.serverless.openshift.io/v1alpha1
+kind: KnativeKafka
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"operator.serverless.openshift.io/v1alpha1","kind":"KnativeKafka","metadata":{"annotations":{},"name":"knative-kafka","namespace":"knative-eventing"},"spec":{"channel":{"authSecretName":"","authSecretNamespace":"","bootstrapServers":"small-event-cluster.amq-streams:9092","enabled":true},"high-availability":{"replicas":1},"source":{"enabled":false}}}
+  creationTimestamp: "2021-10-05T02:36:42Z"
+  deletionGracePeriodSeconds: 0
+  deletionTimestamp: "2021-10-05T14:00:56Z"
+  generation: 2
+  managedFields:
+  - apiVersion: operator.serverless.openshift.io/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+      f:spec:
+        .: {}
+        f:channel:
+          .: {}
+          f:authSecretName: {}
+          f:authSecretNamespace: {}
+          f:bootstrapServers: {}
+          f:enabled: {}
+        f:high-availability:
+          .: {}
+          f:replicas: {}
+        f:source:
+          .: {}
+          f:enabled: {}
+    manager: oc
+    operation: Update
+    time: "2021-10-05T02:36:42Z"
+  - apiVersion: operator.serverless.openshift.io/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:finalizers:
+          .: {}
+          v:"knative-kafka-openshift": {}
+      f:status:
+        .: {}
+        f:conditions: {}
+    manager: operator
+    operation: Update
+    time: "2021-10-05T02:36:52Z"
+  name: knative-kafka
+  namespace: knative-eventing
+  resourceVersion: "2154704"
+  uid: bf2114cf-88f7-40b1-800c-fa05df95bd58
+spec:
+  channel:
+    authSecretName: ""
+    authSecretNamespace: ""
+    bootstrapServers: small-event-cluster.amq-streams:9092
+    enabled: true
+  high-availability:
+    replicas: 1
+  source:
+    enabled: false
+status:
+  conditions:
+  - lastTransitionTime: "2021-10-05T02:37:03Z"
+    status: "True"
+    type: DeploymentsAvailable
+  - lastTransitionTime: "2021-10-05T02:36:52Z"
+    status: "True"
+    type: InstallSucceeded
+  - lastTransitionTime: "2021-10-05T02:37:03Z"
+    status: "True"
+    type: Ready

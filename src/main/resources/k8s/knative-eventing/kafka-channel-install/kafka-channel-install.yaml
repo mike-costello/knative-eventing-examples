@@ -1,0 +1,744 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-addressable-resolver
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+    duck.knative.dev/addressable: "true"
+rules:
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels
+  - kafkachannels/status
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-channelable-manipulator
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+    duck.knative.dev/channelable: "true"
+# Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
+rules:
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels
+  - kafkachannels/status
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-ch-controller
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+rules:
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels
+  - kafkachannels/status
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - "" # Core API group.
+  resources:
+  - services
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+- apiGroups:
+  - "" # Core API group.
+  resources:
+  - services
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+- apiGroups:
+  - "" # Core API Group.
+  resources:
+  - configmaps
+  resourceNames:
+  - kafka-ch-dispatcher
+  verbs:
+  - update
+- apiGroups:
+  - "" # Core API Group.
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "" # Core API group.
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/status
+  verbs: *everything
+- apiGroups:
+    - "" # Core API group.
+  resources:
+    - serviceaccounts
+  verbs: *everything
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs: *everything
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs: *everything
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka-ch-controller
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-ch-dispatcher
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+rules:
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - "" # Core API group.
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - kafkachannels
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "" # Core API Group.
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka-ch-dispatcher
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-webhook
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+rules:
+- # For watching logging configuration and getting certs.
+  apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- # For manipulating certs into secrets.
+  apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - create
+  - list
+  - watch
+  - update
+- # For getting our Deployment so we can decorate with ownerref.
+  apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  verbs:
+  - get
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- # For actually registering our webhook.
+  apiGroups:
+  - "admissionregistration.k8s.io"
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- # Our own resources and statuses we care about.
+  apiGroups:
+  - "messaging.knative.dev"
+  resources:
+  - kafkachannels
+  - kafkachannels/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs: &everything
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka-webhook
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kafka-ch-controller
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+subjects:
+- kind: ServiceAccount
+  name: kafka-ch-controller
+  namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: kafka-ch-controller
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kafka-ch-dispatcher
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+subjects:
+- kind: ServiceAccount
+  name: kafka-ch-dispatcher
+  namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: kafka-ch-dispatcher
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kafka-webhook
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+subjects:
+- kind: ServiceAccount
+  name: kafka-webhook
+  namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: kafka-webhook
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka
+  namespace: knative-eventing
+data:
+  # Broker URL. Replace this with the URLs for your kafka cluster,
+  # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+  bootstrapServers: small-event-cluster-kafka-bootstrap.amq-streams:9092
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-leader-election-kafka
+  namespace: knative-eventing
+data:
+  # An inactive but valid configuration follows; see example.
+  resourceLock: "leases"
+  leaseDuration: "15s"
+  renewDeadline: "10s"
+  retryPeriod: "2s"
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # resourceLock controls which API resource is used as the basis for the
+    # leader election lock. Valid values are:
+    #
+    # - leases -> use the coordination API
+    # - configmaps -> use configmaps
+    # - endpoints -> use endpoints
+    resourceLock: "leases"
+
+    # leaseDuration is how long non-leaders will wait to try to acquire the
+    # lock; 15 seconds is the value used by core kubernetes controllers.
+    leaseDuration: "15s"
+    # renewDeadline is how long a leader will try to renew the lease before
+    # giving up; 10 seconds is the value used by core kubernetes controllers.
+    renewDeadline: "10s"
+    # retryPeriod is how long the leader election client waits between tries of
+    # actions; 2 seconds is the value used by core kuberntes controllers.
+    retryPeriod: "2s"
+    # enabledComponents is a comma-delimited list of component names for which
+    # leader election is enabled. Valid values are:
+    #
+    # - kafkachannel-dispatcher
+    # - kafkachannel-controller
+    enabledComponents: "kafkachannel-dispatcher,kafkachannel-controller"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-webhook
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+    role: kafka-webhook
+spec:
+  ports:
+  - name: https-webhook
+    port: 443
+    targetPort: 8443
+  selector:
+    role: kafka-webhook
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kafka-ch-controller
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v0.23.5
+    messaging.knative.dev/channel: kafka-channel
+    messaging.knative.dev/role: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      messaging.knative.dev/channel: kafka-channel
+      messaging.knative.dev/role: controller
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        messaging.knative.dev/channel: kafka-channel
+        messaging.knative.dev/role: controller
+    spec:
+      restartPolicy: Always
+      serviceAccountName: kafka-ch-controller
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: controller
+          env:
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election
+            - name: DISPATCHER_IMAGE
+              value: >-
+                registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-dispatcher-rhel8@sha256:2f6f11b35b985f6f41f5d3d1b0eeeb1bd3405f4bf0b0f92b54651ce3db53dae3
+            - name: SERVICE_ACCOUNT
+              value: kafka-ch-dispatcher
+            - name: METRICS_PROMETHEUS_HOST
+              value: 127.0.0.1
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-logging
+              mountPath: /etc/config-logging
+          terminationMessagePolicy: File
+          image: >-
+            registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-controller-rhel8@sha256:e4da3015c65c6b68d5d0ff5409547496e0ab78ad3f6045f19899380de748c91b
+        - name: kube-rbac-proxy
+          image: >-
+            registry.redhat.io/openshift4/ose-kube-rbac-proxy@sha256:518f5e036a6c67257c2926d9cad073e46ba0663c1386b97aadbf51d3a27ab559
+          args:
+            - '--secure-listen-address=0.0.0.0:8444'
+            - '--upstream=http://127.0.0.1:9090/'
+            - '--tls-cert-file=/etc/tls/private/tls.crt'
+            - '--tls-private-key-file=/etc/tls/private/tls.key'
+            - '--logtostderr=true'
+            - '--v=10'
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          volumeMounts:
+            - name: secret-kafka-ch-controller-sm-service-tls
+              mountPath: /etc/tls/private
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      serviceAccount: kafka-ch-controller
+      volumes:
+        - name: config-logging
+          configMap:
+            name: config-logging
+            defaultMode: 420
+        - name: secret-kafka-ch-controller-sm-service-tls
+          secret:
+            secretName: kafka-ch-controller-sm-service-tls
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
+---
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: defaulting.webhook.kafka.messaging.knative.dev
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVCekNDQXUrZ0F3SUJBZ0lSQU1NQUd1UkZLMmJia3IzVDdYT0VlUlF3RFFZSktvWklodmNOQVFFTEJRQXcKUXpFVU1CSUdBMVVFQ2hNTGEyNWhkR2wyWlM1a1pYWXhLekFwQmdOVkJBTVRJbXRoWm10aExYZGxZbWh2YjJzdQphMjVoZEdsMlpTMWxkbVZ1ZEdsdVp5NXpkbU13SGhjTk1qRXhNREExTVRRMU5ETTNXaGNOTWpJeE1EQTFNVFExCk5ETTFXakJETVJRd0VnWURWUVFLRXd0cmJtRjBhWFpsTG1SbGRqRXJNQ2tHQTFVRUF4TWlhMkZtYTJFdGQyVmkKYUc5dmF5NXJibUYwYVhabExXVjJaVzUwYVc1bkxuTjJZekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUApBRENDQVFvQ2dnRUJBTFJjYkpyaTJHL1l1NUZPeEtWa1loTVBPRjJDL2hHbEdFNThyRndYVFZSS1pTUmJoWVdDCkJhQy93cEFOVGhhdlRMNDNGcDgydk5hamR3NlF2OU9wRWhYM0hFbTRPUVN5K3o3RndRbHFSTjBKQUx4eE95bTMKeC9kRzhobXJQTmdkNTkxL2J5MjZBdk5OT1RvblJqREV0bGF5MXEzYW0vV0J1YytNR3ZqSURrOXhxSUw3QTZ4ZQpkNDlTbVQ3WHU3NEk3Yk5iNlFQYUdCa2ZOSHN1UEFYNEtvK1RlYk5LYUVuMys4OXMyYjZBS2hLV3V2T3E2V1oyCkZTNDRTb1ZySFl1UzdKdEVPY0JGR1JUTjhRMDBmNVMreVo4cUQ5SWgwVm85c1VjaWMxd056TTQ3cmpWTzZUQ2wKS1pKY0VMSzRjYitsZUxLTDFOSVVVdmcySTBWcWlKRlBTU3NDQXdFQUFhT0I5VENCOGpBT0JnTlZIUThCQWY4RQpCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRkJ3TUNNQThHQTFVZEV3RUIvd1FGCk1BTUJBZjh3SFFZRFZSME9CQllFRkErTk8vNkpEdEkxRFA4UTJGMjRTNG5zMXArWE1JR1FCZ05WSFJFRWdZZ3cKZ1lXQ0RXdGhabXRoTFhkbFltaHZiMnVDSG10aFptdGhMWGRsWW1odmIyc3VhMjVoZEdsMlpTMWxkbVZ1ZEdsdQpaNElpYTJGbWEyRXRkMlZpYUc5dmF5NXJibUYwYVhabExXVjJaVzUwYVc1bkxuTjJZNEl3YTJGbWEyRXRkMlZpCmFHOXZheTVyYm1GMGFYWmxMV1YyWlc1MGFXNW5Mbk4yWXk1amJIVnpkR1Z5TG14dlkyRnNNQTBHQ1NxR1NJYjMKRFFFQkN3VUFBNElCQVFDQmVialIzY0VkdHdFbWd3SzREVkt0NkFjek05bUF5RDBadGtRV0RKRmFDZFVnVEFqcwp5d2VOSTF2WmdXb05MaDlCbFpZaDVYeEVYenJoSmRKaGZFMVh3THJTVmVCMjJQemhkU0dhQ1k3VmJNa0lnM29NCjc4TDliSWhpQjQrMUV4QVRHMUFtWHJQbVF6cVRvam5xNjYrRFZ3NkRkQnRqMzg2V0FlSE53WlNmMkpGRWl3UjYKbHY1b0Flc3lTMncwdWtENlVoaVZObjk5bUxmcFJWWlEzajdHL1NYYU9YaUcvYzYrYkg5dy9TOUdpR2pyZjhjVgpZWlczNFNpclVZa24zNHZKZDRGUGp0MlBIdzNVNTZwYzgyMXh1bVRQQzRCY045VDJxZklCeTl6NERhQzhOc3lQCmxhdkhoMEFqN2ZTTlpUSGEzVTlheUlMOTVkenJrdEJtVExSSgotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    service:
+      name: kafka-webhook
+      namespace: knative-eventing
+  failurePolicy: Fail
+  name: defaulting.webhook.kafka.messaging.knative.dev
+---
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.kafka.messaging.knative.dev
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVCekNDQXUrZ0F3SUJBZ0lSQU1NQUd1UkZLMmJia3IzVDdYT0VlUlF3RFFZSktvWklodmNOQVFFTEJRQXcKUXpFVU1CSUdBMVVFQ2hNTGEyNWhkR2wyWlM1a1pYWXhLekFwQmdOVkJBTVRJbXRoWm10aExYZGxZbWh2YjJzdQphMjVoZEdsMlpTMWxkbVZ1ZEdsdVp5NXpkbU13SGhjTk1qRXhNREExTVRRMU5ETTNXaGNOTWpJeE1EQTFNVFExCk5ETTFXakJETVJRd0VnWURWUVFLRXd0cmJtRjBhWFpsTG1SbGRqRXJNQ2tHQTFVRUF4TWlhMkZtYTJFdGQyVmkKYUc5dmF5NXJibUYwYVhabExXVjJaVzUwYVc1bkxuTjJZekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUApBRENDQVFvQ2dnRUJBTFJjYkpyaTJHL1l1NUZPeEtWa1loTVBPRjJDL2hHbEdFNThyRndYVFZSS1pTUmJoWVdDCkJhQy93cEFOVGhhdlRMNDNGcDgydk5hamR3NlF2OU9wRWhYM0hFbTRPUVN5K3o3RndRbHFSTjBKQUx4eE95bTMKeC9kRzhobXJQTmdkNTkxL2J5MjZBdk5OT1RvblJqREV0bGF5MXEzYW0vV0J1YytNR3ZqSURrOXhxSUw3QTZ4ZQpkNDlTbVQ3WHU3NEk3Yk5iNlFQYUdCa2ZOSHN1UEFYNEtvK1RlYk5LYUVuMys4OXMyYjZBS2hLV3V2T3E2V1oyCkZTNDRTb1ZySFl1UzdKdEVPY0JGR1JUTjhRMDBmNVMreVo4cUQ5SWgwVm85c1VjaWMxd056TTQ3cmpWTzZUQ2wKS1pKY0VMSzRjYitsZUxLTDFOSVVVdmcySTBWcWlKRlBTU3NDQXdFQUFhT0I5VENCOGpBT0JnTlZIUThCQWY4RQpCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRkJ3TUNNQThHQTFVZEV3RUIvd1FGCk1BTUJBZjh3SFFZRFZSME9CQllFRkErTk8vNkpEdEkxRFA4UTJGMjRTNG5zMXArWE1JR1FCZ05WSFJFRWdZZ3cKZ1lXQ0RXdGhabXRoTFhkbFltaHZiMnVDSG10aFptdGhMWGRsWW1odmIyc3VhMjVoZEdsMlpTMWxkbVZ1ZEdsdQpaNElpYTJGbWEyRXRkMlZpYUc5dmF5NXJibUYwYVhabExXVjJaVzUwYVc1bkxuTjJZNEl3YTJGbWEyRXRkMlZpCmFHOXZheTVyYm1GMGFYWmxMV1YyWlc1MGFXNW5Mbk4yWXk1amJIVnpkR1Z5TG14dlkyRnNNQTBHQ1NxR1NJYjMKRFFFQkN3VUFBNElCQVFDQmVialIzY0VkdHdFbWd3SzREVkt0NkFjek05bUF5RDBadGtRV0RKRmFDZFVnVEFqcwp5d2VOSTF2WmdXb05MaDlCbFpZaDVYeEVYenJoSmRKaGZFMVh3THJTVmVCMjJQemhkU0dhQ1k3VmJNa0lnM29NCjc4TDliSWhpQjQrMUV4QVRHMUFtWHJQbVF6cVRvam5xNjYrRFZ3NkRkQnRqMzg2V0FlSE53WlNmMkpGRWl3UjYKbHY1b0Flc3lTMncwdWtENlVoaVZObjk5bUxmcFJWWlEzajdHL1NYYU9YaUcvYzYrYkg5dy9TOUdpR2pyZjhjVgpZWlczNFNpclVZa24zNHZKZDRGUGp0MlBIdzNVNTZwYzgyMXh1bVRQQzRCY045VDJxZklCeTl6NERhQzhOc3lQCmxhdkhoMEFqN2ZTTlpUSGEzVTlheUlMOTVkenJrdEJtVExSSgotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    service:
+      name: kafka-webhook
+      namespace: knative-eventing
+      path: /resource-validation
+      port: 443 
+  failurePolicy: Fail
+  name: validation.webhook.kafka.messaging.knative.dev
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: messaging-webhook-certs
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: "v0.23.5"
+# The data is populated at install time.
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kafka-webhook
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v0.23.5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-webhook
+      role: kafka-webhook
+  template:
+    metadata:
+      labels:
+        app: kafka-webhook
+        role: kafka-webhook
+      annotations:
+        sidecar.istio.io/inject: 'true'
+    spec:
+      restartPolicy: Always
+      serviceAccountName: kafka-webhook
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 300
+      securityContext: {}
+      containers:
+        - resources:
+            limits:
+              cpu: 200m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 50Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8443
+              scheme: HTTPS
+              httpHeaders:
+                - name: k-kubelet-probe
+                  value: webhook
+            timeoutSeconds: 1
+            periodSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: kafka-webhook
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8443
+              scheme: HTTPS
+              httpHeaders:
+                - name: k-kubelet-probe
+                  value: webhook
+            initialDelaySeconds: 20
+            timeoutSeconds: 1
+            periodSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: WEBHOOK_NAME
+              value: kafka-webhook
+            - name: WEBHOOK_PORT
+              value: '8443'
+            - name: METRICS_PROMETHEUS_HOST
+              value: 127.0.0.1
+          ports:
+            - name: https-webhook
+              containerPort: 8443
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+            - name: profiling
+              containerPort: 8008
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          terminationMessagePolicy: FallbackToLogsOnError
+          image: >-
+            registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-webhook-rhel8@sha256:87358c28110dbcd4c309e734144539e92c3744a2eb36a874e6ada5d10d316c1c
+        - name: kube-rbac-proxy
+          image: >-
+            registry.redhat.io/openshift4/ose-kube-rbac-proxy@sha256:518f5e036a6c67257c2926d9cad073e46ba0663c1386b97aadbf51d3a27ab559
+          args:
+            - '--secure-listen-address=0.0.0.0:8444'
+            - '--upstream=http://127.0.0.1:9090/'
+            - '--tls-cert-file=/etc/tls/private/tls.crt'
+            - '--tls-private-key-file=/etc/tls/private/tls.key'
+            - '--logtostderr=true'
+            - '--v=10'
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          volumeMounts:
+            - name: secret-kafka-webhook-sm-service-tls
+              mountPath: /etc/tls/private
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      serviceAccount: kafka-webhook
+      volumes:
+        - name: secret-kafka-webhook-sm-service-tls
+          secret:
+            secretName: kafka-webhook-sm-service-tls
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+
+---

@@ -1,0 +1,105 @@
+﻿kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kafka-ch-controller
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v0.23.5
+    messaging.knative.dev/channel: kafka-channel
+    messaging.knative.dev/role: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      messaging.knative.dev/channel: kafka-channel
+      messaging.knative.dev/role: controller
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        messaging.knative.dev/channel: kafka-channel
+        messaging.knative.dev/role: controller
+    spec:
+      restartPolicy: Always
+      serviceAccountName: kafka-ch-controller
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: controller
+          env:
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election
+            - name: DISPATCHER_IMAGE
+              value: >-
+                registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-dispatcher-rhel8@sha256:2f6f11b35b985f6f41f5d3d1b0eeeb1bd3405f4bf0b0f92b54651ce3db53dae3
+            - name: SERVICE_ACCOUNT
+              value: kafka-ch-dispatcher
+            - name: METRICS_PROMETHEUS_HOST
+              value: 127.0.0.1
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-logging
+              mountPath: /etc/config-logging
+          terminationMessagePolicy: File
+          image: >-
+            registry.redhat.io/openshift-serverless-1/eventing-kafka-channel-controller-rhel8@sha256:e4da3015c65c6b68d5d0ff5409547496e0ab78ad3f6045f19899380de748c91b
+        - name: kube-rbac-proxy
+          image: >-
+            registry.redhat.io/openshift4/ose-kube-rbac-proxy@sha256:518f5e036a6c67257c2926d9cad073e46ba0663c1386b97aadbf51d3a27ab559
+          args:
+            - '--secure-listen-address=0.0.0.0:8444'
+            - '--upstream=http://127.0.0.1:9090/'
+            - '--tls-cert-file=/etc/tls/private/tls.crt'
+            - '--tls-private-key-file=/etc/tls/private/tls.key'
+            - '--logtostderr=true'
+            - '--v=10'
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          volumeMounts:
+            - name: secret-kafka-ch-controller-sm-service-tls
+              mountPath: /etc/tls/private
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      serviceAccount: kafka-ch-controller
+      volumes:
+        - name: config-logging
+          configMap:
+            name: config-logging
+            defaultMode: 420
+        - name: secret-kafka-ch-controller-sm-service-tls
+          secret:
+            secretName: kafka-ch-controller-sm-service-tls
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

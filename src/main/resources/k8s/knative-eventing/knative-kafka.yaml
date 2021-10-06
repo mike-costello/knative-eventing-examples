@@ -1,0 +1,15 @@
+apiVersion: operator.serverless.openshift.io/v1alpha1
+kind: KnativeKafka
+metadata:
+  name: knative-kafka
+  namespace: knative-eventing
+spec:
+  channel:
+    authSecretName: ''
+    authSecretNamespace: ''
+    bootstrapServers: 'small-event-cluster.amq-streams:9092'
+    enabled: true
+  high-availability:
+    replicas: 1
+  source:
+    enabled: false

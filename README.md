@@ -1,6 +1,16 @@
 # Governing Knative Eventing With Istio (A Demo)
 
 
+## Setup Istio  
+
+### Elastic Search Operator 
+
+### Jaeger 
+
+### Kiali 
+
+### Isito operator install 
+
 ## First things, first:  _Identity_
 
 ### Create wildcard cert 

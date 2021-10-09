@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: kafka-webhook
+    networking.knative.dev/ingress-provider: istio
+    serving.knative.dev/release: devel
+  name: kafka-webhook
+  namespace: knative-eventing
+spec:
+  ingress:
+  - {}
+  podSelector:
+    matchLabels:
+      app: kafka-webhook
+  policyTypes:
+  - Ingress

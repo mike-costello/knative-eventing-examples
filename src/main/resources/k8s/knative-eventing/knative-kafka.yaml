@@ -7,7 +7,7 @@ spec:
   channel:
     authSecretName: ''
     authSecretNamespace: ''
-    bootstrapServers: 'small-event-cluster.amq-streams:9092'
+    bootstrapServers: 'small-event-cluster-kafka-bootstrap.amq-streams:9092'
     enabled: true
   high-availability:
     replicas: 1

@@ -24,3 +24,8 @@ data:
         kind: ConfigMap
         name: config-smcon-tenant-channel
         namespace: servicemesh-con
+      important-tenant: 
+        brokerClass: KafkaBroker
+        kind: ConfigMap
+        name: important-tenant-channel
+        namespace: important-tenant

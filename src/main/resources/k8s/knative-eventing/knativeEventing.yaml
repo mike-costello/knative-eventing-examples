@@ -22,13 +22,3 @@ spec:
       annotations:
        "sidecar.istio.io/inject": "true"
        "sidecar.istio.io/rewriteAppHTTPProbers": "true"
-    ## FIXME this doesn't seem to work
-    - name: kafka-ch-controller
-      annotations: 
-       "sidecar.istio.io/inject": "true"
-       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
-    - name: kafka-webhook
-      annotations:
-       "sidecar.istio.io/inject": "true"
-       "sidecar.istio.io/rewriteAppHTTPProbers": "true"
-

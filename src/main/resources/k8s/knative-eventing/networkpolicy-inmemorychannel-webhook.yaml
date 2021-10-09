@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: inmemorychannel-webhook
+    networking.knative.dev/ingress-provider: istio
+    serving.knative.dev/release: devel
+  name: inmemorychannel-webhook
+  namespace: knative-eventing
+spec:
+  ingress:
+  - {}
+  podSelector:
+    matchLabels:
+      messaging.knative.dev/channel: in-memory-channel
+      messaging.knative.dev/role: controller
+  policyTypes:
+  - Ingress

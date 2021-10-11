@@ -1,0 +1,10 @@
+/.settings
+/target/
+*.class
+*.preferences
+*.settings
+*.key
+*.csr
+*.crt
+*.project
+

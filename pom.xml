@@ -5,4 +5,47 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>knative-eventing-examples</name>
   <description>knative-eventing-examples</description>
+  <properties>
+		<version.camel>3.0.1</version.camel>
+		<version.debezium>1.0.0.Final</version.debezium>
+		<version.debezium.tag>1.0</version.debezium.tag>
+		<version.postgresql.driver>42.2.9</version.postgresql.driver>
+		<version.org.slf4j>1.7.29</version.org.slf4j>
+		<version.quarkus>1.2.0.Final</version.quarkus>
+		<version.jackson>2.9.1</version.jackson>
+		<version.kafka>2.4.0</version.kafka>
+		<version.plugin.shade>3.2.1</version.plugin.shade>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-cdi</artifactId>
+			<version>${version.camel}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-core</artifactId>
+			<version>${version.camel}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-main</artifactId>
+			<version>${version.camel}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-ognl</artifactId>
+			<version>${version.camel}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-amqp</artifactId>
+			<version>${version.camel}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${version.org.slf4j}</version>
+		</dependency>
+	</dependencies>
 </project>

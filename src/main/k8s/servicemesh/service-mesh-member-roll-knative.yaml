@@ -1,4 +1,3 @@
-###FIXME mcostell...this likely needs to include some more stuffs 
 apiVersion: maistra.io/v1
 kind: ServiceMeshMemberRoll
 metadata:
@@ -8,5 +7,5 @@ spec:
   members: 
     - knative-serving
     - knative-eventing 
-    - servicemesh-con
     - amq-streams
+    - servicemesh-con

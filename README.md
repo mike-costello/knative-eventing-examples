@@ -1,10 +1,10 @@
 # Governing Knative Eventing With Istio (A Demo)
 
-As we take on cloud native architecture(s), it is imperative that our architectures consider cloud native characteristics that are distinct from our traditional architectural concerns. In this demo, we will take on those concerns: [Cloud Native Integration] (https://github.com/rh-ei-stp/cloud-native-integration), and attempt to inject governance concepts. 
+As we take on cloud native architecture(s), it is imperative that our architectures consider cloud native characteristics that are distinct from our traditional architectural concerns. In this demo, we will take on those concerns: [Cloud Native Integration](https://github.com/rh-ei-stp/cloud-native-integration), and attempt to inject governance concepts. 
 
 ## What is *Cloud Native*? 
 
-While laborious explanation is provided here: [What is Cloud Native?] ([Cloud Native Integration] (https://github.com/mike-costello/cloud-native-integration/blob/master/definition-cloudnative.md) we can distill *cloud native* into the following set of characteristics: 
+While laborious explanation is provided here: [What is Cloud Native?](https://github.com/mike-costello/cloud-native-integration/blob/master/definition-cloudnative.md) We can distill *cloud native* into the following set of characteristics: 
 * **Elasticity**:	As this is a core characteristic of underlying cloud platforms, any workload that sits on top of a "cloud" must be capable of exploiting this capability as a core technology feature
 * **On Demand Scaling**: As this is a core characteristic of underlying cloud platforms, this should be a core feature of any "cloud native" technology, architectural approach or deployment
 * **Resilient**: High Availability should be a core concern of any technology or deployment. This implies both meainingful availability in calm and turbulent waters (i.e. outage of an availability zone, data center, etc.).
@@ -17,7 +17,7 @@ While laborious explanation is provided here: [What is Cloud Native?] ([Cloud Na
 
 Governance can be a rather amorphous word in software often associated with heavyweight and bureaucratic processes; however, as we take on cloud native architectures, we notice an exponentiation of our runtimes and deployments, communications protocols, payload types, and bespoke systems leading to an unwieldy explosion of deployment stuffs and things to manage. This presents a critical set of risks for organizations as they enter the cloud. 
 
-"Governance" is an attempt to bring some order to our software chaos. Governance, in nearly all definitions of it, attempts to take on the following enterprise characteristics [What is Governance?] (https://sloanreview.mit.edu/article/7-key-principles-to-govern-digital-initiatives/): 
+"Governance" is an attempt to bring some order to our software chaos. Governance, in nearly all definitions of it, attempts to take on the following enterprise characteristics [What is Governance?](https://sloanreview.mit.edu/article/7-key-principles-to-govern-digital-initiatives/): 
 * Centralize information about digital initiatives rather than the initiatives themselves
 * Move from centralized to decentralized governance of digital initiatives as digital maturity grows.
 * Decentralize ideation, but centralize idea evaluation and prioritization.
@@ -28,11 +28,13 @@ Governance can be a rather amorphous word in software often associated with heav
 
 ## Intro 
 
-Now that we have introduced some concepts we're after, let's take a (*hexagonal*) look at what this means for our enterprise: ![The View From Space](/images/CloudNativeIntegration.00.00.001.png "Cloud Native Integration: From Space")
+Now that we have introduced some concepts we're after, let's take a (*hexagonal*) look at what this means for our enterprise: 
+
+![The View From Space](/images/CloudNativeIntegration.00.00.001.png "Cloud Native Integration: From Space")
 
 ### Composition of our *Cloud Native* Deployments: 
 
-As we can see our *cloud native* deployments begin to take on aspects of *hexagonal architecture* ![What is Hexagonal Architecture] (https://alistair.cockburn.us/hexagonal-architecture/), we notice a few distinct components: 
+As we can see our *cloud native* deployments begin to take on aspects of *hexagonal architecture* ([What is Hexagonal Architecture?](https://alistair.cockburn.us/hexagonal-architecture/)), we notice a few distinct components: 
 
 * **Event Mesh**
 The *event mesh* intends to handle peer to peer event communication in a fashion that allows for several *Cloud Native* characteristics such as high availability, reliability, and location agnostic behaviour between peers. The event mesh acts as a rendezvous point between eventing peers (event emitters and event receivers), and provides event emitters a graph of event receivers that may span clusters or even clouds. 
@@ -63,11 +65,11 @@ Now that we've defined some terms and we know what we're after let's lay down th
 In this demo we use the following technologies: 
 * *An Openshift 4.8 Cluster* - while this demo uses Openshift, to use these components we only require a **K8s cluster version >= 1.19**
 * *A User with Cluster Admin authority* - much of our setup will require cluster admin in our cluster
-* *Maistra v2.0.8 aka Openshift ServiceMesh* - Maistra ![Maistra] (https://maistra.io/) is *Red Hat* distribution of Istio 2.x. While we do not need *Maistra*, we do need an Istio 2.x distribution. As we're using strictly Istio API's, this demo should fit neatly into most *servicemesh* distros that leverage Istio.  
-* *Knative v0.23 aka Openshift Serverless* - Openshift Serverless is a distro of Knative ![Knative] (https://knative.dev/docs/). While the *Openshift Serverless* operators are handy, we can take in any distribution of Knative that is v0.23 or greater
-* * (Nice to Have) Strimzi* - in Knative Eventing, as we've discussed we create a pub-sub abstraction via the concept of *brokers, triggers, channels and subscriptions*. This can all simply be *in-memory*; however, for proper enterprise use we will want persistent messaging over our event bus  
+* *Maistra v2.0.8 aka Openshift ServiceMesh* - Maistra [Maistra](https://maistra.io/) is *Red Hat* distribution of Istio 2.x. While we do not need *Maistra*, we do need an Istio 2.x distribution. As we're using strictly Istio API's, this demo should fit neatly into most *servicemesh* distros that leverage Istio.  
+* *Knative v0.23 aka Openshift Serverless* - Openshift Serverless is a distro of Knative [Knative](https://knative.dev/docs/). While the *Openshift Serverless* operators are handy, we can take in any distribution of Knative that is v0.23 or greater
+* (Nice to Have) Strimzi* - in Knative Eventing, as we've discussed we create a pub-sub abstraction via the concept of *brokers, triggers, channels and subscriptions*. This can all simply be *in-memory*; however, for proper enterprise use we will want persistent messaging over our event bus  
 
-* * (Nice to Have) Camel-K* - ultimately, we need Knative services, and while we can easily do this without a thing like *Camel-K* it provides some ease of use, and abstracts our deployment needs; however, any deployment of *Knative Serving* will do for our demo runtime.    
+* (Nice to Have) Camel-K* - ultimately, we need Knative services, and while we can easily do this without a thing like *Camel-K* it provides some ease of use, and abstracts our deployment needs; however, any deployment of *Knative Serving* will do for our demo runtime.    
 
 ### Installing our Istio Operator (aka *Openshift ServiceMesh* aka *Maistra*)  
 
@@ -80,9 +82,10 @@ Initially, we'll want to begin setting up operators in our cluster. There are a 
 #### Installing these operators 
 
 While Openshift is not required for our demo, let's take a look at the operators we will want to provide: 
-![The View From Space](/images/installed-operators.png "Installed Operators")
 
-**Note** *Community versions of these operators may be used via Operator Lifecycle Mananger ![OLM](https://github.com/operator-framework/operator-lifecycle-manager)
+![Installed Operators](/images/installed-operators.png "Installed Operators")
+
+**Note** *Community versions of these operators may be used via Operator Lifecycle Mananger [OLM](https://github.com/operator-framework/operator-lifecycle-manager)
 
 #### Installing our *Service Mesh Control Plane*
 
@@ -98,7 +101,7 @@ Now that we have our operators installed and a namespace for our Istio system co
 kubectl apply -f ./src/main/k8s/servicemesh/service-mesh-control-plane.yaml -n istio-system 
 ```
 
-This will apply the follwing resource to our istio system namespace:
+This will apply the following resource to our istio system namespace:
 
 ``` 
 apiVersion: maistra.io/v2
@@ -158,7 +161,7 @@ prometheus-bfb5bd8b4-pqv82                        3/3       Running   0         
 
 A critical part of our governance model is *"who"* gets to participate in the service mesh. This can be done a number of ways; however, we'll leverage our operator to initiate this and do some really cool stuffs. 
 
-**Note** - the concept of a *ServiceMeshMember* is a *Maistra* concept; however, how the operator functionally handles this can be replicated via use of *istioctl* and *NetworkPolicy* ![Network Policy] (https://kubernetes.io/docs/concepts/services-networking/network-policies)
+**Note** - the concept of a *ServiceMeshMember* is a *Maistra* concept; however, how the operator functionally handles this can be replicated via use of *istioctl* and [*Network Policy*](https://kubernetes.io/docs/concepts/services-networking/network-policies)
 
 Let's first create our application namespace that we will be adding into the our mesh: 
 
@@ -516,7 +519,7 @@ configmap/config-tracing configured
 ```
 This will allow knative-eventing spans to be traced by Jaeger. Later on we'll see how this is a critical part of our governance capability. 
 
-While we have properly configured *knative-eventing* as a servicemesh member, we need to expose our *knative-eventing* webhooks to our Kube APIServer to ensure we can take in *knative-eventing **channel*** resources to ensure we can take in *knative-eventing* resources as they are applied to our application namespaces. 
+While we have properly configured *knative-eventing* as a servicemesh member, we need to expose our *knative-eventing* webhooks to our Kube APIServer to ensure we can take in *knative-eventing* **channel** resources to ensure we can take in *knative-eventing* resources as they are applied to our application namespaces. 
 
 ```
 [mcostell@work-mcostell knative-eventing-examples]$ kubectl apply -f ./src/main/k8s/knative-eventing/networkpolicy-eventing-webhook.yaml -n knative-eventing 
@@ -609,7 +612,7 @@ data:
 
 What is critical about this wiring up of our configmap is that we inject different eventing configurations by namespace. As we will label our application namespace later to be handled by *knative-eventing* this implies that we have a **central configuration for pub-sub** activities, and that this central configuration is managed by our servicemesh. 
 
-We have one more activity we need to engage in before we are done configuring *knative-eventing*. As we laid down our *knative-kafka* resource, it is actually handled by a seperate operator ![Knative Kafka Operator](https://github.com/openshift-knative/knative-kafka-operator). This operator has no *Istio* integration; however, we will need to inject these pods with proxies to handle *mTls* as well as the application of other istio policies. 
+We have one more activity we need to engage in before we are done configuring *knative-eventing*. As we laid down our *knative-kafka* resource, it is actually handled by a seperate operator [Knative Kafka Operator](https://github.com/openshift-knative/knative-kafka-operator). This operator has no *Istio* integration; however, we will need to inject these pods with proxies to handle *mTls* as well as the application of other istio policies. 
 
 As a result, we'll patch these deployments to ensure injection of our proxy (as the pods are already members of the servicemesh): 
 
@@ -765,7 +768,7 @@ We are now completely configured for application deployment. So, let's add an ap
 
 #### Deploying the Sample application into our *ServiceMesh*
 
-**Note**: to complete this exercise requires the prior installation of the *Camel-K* operator as well as local installation of its cli client: ![Camel-K CLI](https://camel.apache.org/camel-k/latest/cli/cli.html)
+**Note**: to complete this exercise requires the prior installation of the *Camel-K* operator as well as local installation of its cli client: [Camel-K CLI](https://camel.apache.org/camel-k/latest/cli/cli.html)
 
 Intially, we will want to establish the channels our *knative-eventing* service uses. 
 
